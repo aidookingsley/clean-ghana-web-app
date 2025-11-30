@@ -14,13 +14,9 @@ import {
   Navigation, User, Building2, Truck, Image as ImageIcon
 } from 'lucide-react';
 
-
-/* --- FIREBASE CONFIGURATION & SETUP --- 
-  This section handles the connection to the backend database.
-*/
+/* --- FIREBASE CONFIGURATION & SETUP --- */
 let firebaseConfig;
 
-// Hardcoded config for deployment to Netlify without env vars. It can be put into .env files too but it's safe to leave it here for this project
 
 const hardcodedConfig = {
   apiKey: "AIzaSyBrD71MIMtC9_vJ9SC45xB2KUKk3p3leFw",
@@ -32,46 +28,43 @@ const hardcodedConfig = {
   measurementId: "G-SLBBM6NYHB"
 };
 
+// Set default to hardcoded (works on Netlify/Vercel)
 firebaseConfig = hardcodedConfig;
 
-// The try-catch allows us to use a sandbox environment where the config is injected at runtime
+
 try {
   if (typeof globalThis.__firebase_config !== 'undefined' && globalThis.__firebase_config) {
+    // If we are in the sandbox, use the sandbox keys instead
     firebaseConfig = typeof globalThis.__firebase_config === 'string' ? JSON.parse(globalThis.__firebase_config) : globalThis.__firebase_config;
   }
 } catch (err) {
-  // If the injected config is invalid, warn and fallback
   console.warn('Failed to parse injected __firebase_config:', err);
 }
 
-// Fallback to environment variables (REACT_APP_FIREBASE_*) or a minimal default for local/demo runs
+// Final Safety Check
 if (!firebaseConfig) {
-  firebaseConfig = {
-    apiKey: import.meta.env.REACT_APP_FIREBASE_API_KEY || '',
-    authDomain: import.meta.env.REACT_APP_FIREBASE_AUTH_DOMAIN || '',
-    projectId: import.meta.env.REACT_APP_FIREBASE_PROJECT_ID || '',
-    storageBucket: import.meta.env.REACT_APP_FIREBASE_STORAGE_BUCKET || '',
-    messagingSenderId: import.meta.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: import.meta.env.REACT_APP_FIREBASE_APP_ID || 'clean-ghana-app'
-  };
+  console.error("Firebase Configuration is missing!");
 }
 
-// Initialize firebase app
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Helper to get App ID for paths
-const appId = (typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : (firebaseConfig.appId || 'clean-ghana-app'));
 
-/* --- COMPONENTS --- 
-*/
+
+// Helper to get App ID for paths
+// Uses the ID from your config ("clean-ghana-app") or falls back if in sandbox
+const appId = (typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : 'clean-ghana-app');
+
+
+/* --- COMPONENTS --- */
 
 // --- 1. LOGIN SCREEN ---
 const LoginScreen = ({ onLogin }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 flex flex-col items-center justify-center p-4">
-      <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md">
+      <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-lg md:max-w-xl">
         <div className="flex justify-center mb-6">
           <div className="bg-green-600 p-4 rounded-full shadow-lg">
             <Recycle className="w-10 h-10 text-white" />
@@ -121,7 +114,7 @@ const LoginScreen = ({ onLogin }) => {
           </button>
         </div>
       </div>
-      <p className="mt-8 text-gray-400 text-sm">Final Year Project Mockup</p>
+      <p className="mt-10 text-gray-400 text-xs">Final Year Project Mockup | User ID: {auth.currentUser?.uid || 'Loading...'}</p>
     </div>
   );
 };
@@ -147,7 +140,6 @@ const CitizenDashboard = ({ user, onLogout }) => {
     setLocationStatus('locating');
     
     if (!navigator.geolocation) {
-      // Use custom alert instead of window.alert
       console.log("Geolocation is not supported by your browser");
       setLocation({ lat: 5.6037, lng: -0.1870, address: "Legon, Accra (Default Fallback)" });
       setLocationStatus('success'); 
@@ -187,7 +179,6 @@ const CitizenDashboard = ({ user, onLogout }) => {
         }
       },
       (error) => {
-        // This block runs if the user denies permission OR the browser cannot find a location (common on desktop).
         console.error("Location retrieval failed (Code: " + error.code + "):", error.message || error);
         
         // Fallback for demo if permission denied or location fails
@@ -197,9 +188,7 @@ const CitizenDashboard = ({ user, onLogout }) => {
           address: "Legon, Accra (Demo Location Fallback)" 
         }); 
         
-        // Set status to success so the UI updates and shows the fallback location
         setLocationStatus('success'); 
-        // Display a message to the user that location access failed
         console.log("Location access failed or denied. Using demo location for testing.");
       }
     );
@@ -225,14 +214,10 @@ const CitizenDashboard = ({ user, onLogout }) => {
   // Submit Waste Report
   const handleSubmitReport = async (e) => {
     e.preventDefault();
-    // Replaced alert with console.log for better UX in embedded environments
     if (!description || !location) return console.log("Please add description and location");
     
     setLoading(true);
     try {
-      // Note: In a real app, you would upload the 'imagePreview' file to Firebase Storage here.
-      // For this demo, we are using a placeholder or the base64 string if small enough, 
-      // but to keep Firestore clean we'll use a placeholder URL if no image is actually uploaded.
       const finalImage = imagePreview || 'https://placehold.co/600x400/e2e8f0/1e293b?text=Waste+Image';
 
       await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'reports'), {
@@ -245,7 +230,6 @@ const CitizenDashboard = ({ user, onLogout }) => {
         timestamp: serverTimestamp(),
         imageUrl: finalImage 
       });
-      // Replaced alert with console.log for better UX
       console.log("Report submitted successfully!");
       setDescription('');
       setLocation(null);
@@ -260,7 +244,6 @@ const CitizenDashboard = ({ user, onLogout }) => {
   // Submit Recycling Request
   const handleSubmitRecycle = async (e) => {
     e.preventDefault();
-    // Replaced alert with console.log for better UX in embedded environments
     if (!qty || !location) return console.log("Please add quantity and location");
 
     setLoading(true);
@@ -274,7 +257,6 @@ const CitizenDashboard = ({ user, onLogout }) => {
         reporterId: user.uid,
         timestamp: serverTimestamp()
       });
-      // Replaced alert with console.log for better UX
       console.log("Pickup request sent to recyclers!");
       setQty('');
       setLocation(null);
@@ -288,49 +270,50 @@ const CitizenDashboard = ({ user, onLogout }) => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-green-600 text-white p-4 shadow-md sticky top-0 z-10">
-        <div className="flex justify-between items-center max-w-4xl mx-auto">
+      <div className="bg-green-700 text-white p-4 shadow-xl sticky top-0 z-10">
+        <div className="flex justify-between items-center max-w-6xl mx-auto">
           <h2 className="text-xl font-bold flex items-center gap-2">
-            <Recycle className="h-6 w-6" /> CleanGhana
+            <Recycle className="h-6 w-6 text-green-300" /> CleanGhana Citizen
           </h2>
-          <button onClick={onLogout} className="text-sm bg-green-700 px-3 py-1 rounded-lg">
-            Logout
+          <button onClick={onLogout} className="text-sm bg-green-600 px-3 py-1 rounded-lg hover:bg-green-500 transition-colors">
+            <LogOut className="h-4 w-4 inline mr-1"/> Logout
           </button>
         </div>
       </div>
 
-      <div className="max-w-md mx-auto p-4 mt-4">
-        {/* Navigation Tabs */}
-        <div className="flex bg-white rounded-xl shadow-sm p-1 mb-6">
+      {/* Main Content Area - Wider on Desktop */}
+      <div className="max-w-xl md:max-w-3xl lg:max-w-4xl mx-auto p-4 mt-8">
+        {/* Navigation Tabs (Improved Style) */}
+        <div className="flex bg-white rounded-2xl shadow-xl p-2 mb-8 border border-gray-100">
           <button 
             onClick={() => setActiveTab('report')}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'report' ? 'bg-green-100 text-green-700' : 'text-gray-500'}`}
+            className={`flex-1 py-3 rounded-xl text-base font-semibold transition-all duration-300 ${activeTab === 'report' ? 'bg-red-500 text-white shadow-md shadow-red-200' : 'text-gray-600 hover:bg-gray-100'}`}
           >
-            Report Waste
+            <AlertTriangle className="h-5 w-5 inline mr-1"/> Report Waste
           </button>
           <button 
             onClick={() => setActiveTab('recycle')}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'recycle' ? 'bg-green-100 text-green-700' : 'text-gray-500'}`}
+            className={`flex-1 py-3 rounded-xl text-base font-semibold transition-all duration-300 ${activeTab === 'recycle' ? 'bg-green-600 text-white shadow-md shadow-green-200' : 'text-gray-600 hover:bg-gray-100'}`}
           >
-            Recycle
+            <Recycle className="h-5 w-5 inline mr-1"/> Recycle Pickup
           </button>
         </div>
 
         {/* Content Area */}
         {activeTab === 'report' ? (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center mb-6">
-              <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                <AlertTriangle className="text-red-500 h-8 w-8" />
+              <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 border-4 border-red-100">
+                <AlertTriangle className="text-red-600 h-8 w-8" />
               </div>
-              <h3 className="text-lg font-bold text-gray-800">Report Illegal Dumping</h3>
-              <p className="text-sm text-gray-500">Help keep your community clean</p>
+              <h3 className="text-2xl font-bold text-gray-800">Illegal Dumping Report</h3>
+              <p className="text-sm text-gray-500">Document the issue for sanitation action.</p>
             </div>
 
-            <form onSubmit={handleSubmitReport} className="space-y-4">
+            <form onSubmit={handleSubmitReport} className="space-y-6">
               {/* Camera Input Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Upload Photo</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Photo of Waste Site</label>
                 
                 {/* Hidden File Input */}
                 <input 
@@ -344,32 +327,32 @@ const CitizenDashboard = ({ user, onLogout }) => {
 
                 <div 
                   onClick={handleCameraClick}
-                  className={`border-2 border-dashed rounded-xl p-0 flex flex-col items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer transition-colors overflow-hidden relative ${imagePreview ? 'border-green-500 h-64' : 'border-gray-300 h-40'}`}
+                  className={`border-2 border-dashed rounded-xl p-0 flex flex-col items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer transition-colors overflow-hidden relative ${imagePreview ? 'border-red-500 h-64' : 'border-gray-300 h-40'}`}
                 >
                   {imagePreview ? (
                     <>
                       <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                        <span className="text-white font-bold flex items-center gap-2"><Camera className="h-5 w-5"/> Change Photo</span>
+                      <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <span className="text-white font-bold flex items-center gap-2 text-lg"><Camera className="h-6 w-6"/> Change Photo</span>
                       </div>
                     </>
                   ) : (
                     <div className="flex flex-col items-center p-8">
-                      <Camera className="h-8 w-8 mb-2" />
-                      <span className="text-xs">Tap to take photo</span>
+                      <Camera className="h-10 w-10 mb-2 text-gray-500" />
+                      <span className="text-sm font-medium">Tap to take photo</span>
                     </div>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
                 <textarea 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g., Overflowing bin at market circle..."
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
-                  rows="3"
+                  placeholder="e.g., Overflowing bin near the main road. Mostly household rubbish and plastics."
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-4 focus:ring-red-200 outline-none transition-shadow"
+                  rows="4"
                 />
               </div>
 
@@ -377,42 +360,44 @@ const CitizenDashboard = ({ user, onLogout }) => {
                  <button 
                   type="button"
                   onClick={handleGetLocation}
-                  className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-medium transition-colors ${locationStatus === 'success' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600 border border-gray-200'}`}
+                  className={`w-full flex items-center justify-center gap-2 p-4 rounded-xl text-base font-semibold transition-all duration-300 shadow-md ${locationStatus === 'success' ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-300' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
                  >
-                   <MapPin className="h-4 w-4" />
-                   {locationStatus === 'idle' && "Get GPS Location"}
+                   <MapPin className="h-5 w-5" />
+                   {locationStatus === 'idle' && "1. Get GPS Location"}
                    {locationStatus === 'locating' && "Locating..."}
-                   {locationStatus === 'success' && location && location.address}
+                   {locationStatus === 'success' && location && (
+                      <span className="truncate">{location.address}</span>
+                   )}
                    {locationStatus === 'error' && "Retry Location"}
                  </button>
               </div>
 
               <button 
                 type="submit" 
-                disabled={loading}
-                className="w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all disabled:opacity-50"
+                disabled={loading || !location || !description}
+                className="w-full bg-red-600 text-white py-4 mt-6 rounded-xl font-bold text-lg shadow-xl shadow-red-200 hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Submitting...' : 'Submit Report'}
+                {loading ? 'Submitting...' : 'Submit Waste Report'}
               </button>
             </form>
           </div>
         ) : (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center mb-6">
-              <div className="bg-green-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="bg-green-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 border-4 border-green-100">
                 <Recycle className="text-green-600 h-8 w-8" />
               </div>
-              <h3 className="text-lg font-bold text-gray-800">Recycling Pickup</h3>
-              <p className="text-sm text-gray-500">Earn points for sustainable habits</p>
+              <h3 className="text-2xl font-bold text-gray-800">Recycling Pickup Request</h3>
+              <p className="text-sm text-gray-500">Schedule collection of sorted materials.</p>
             </div>
 
-            <form onSubmit={handleSubmitRecycle} className="space-y-4">
+            <form onSubmit={handleSubmitRecycle} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Material Type</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Material Type</label>
                 <select 
                   value={materialType}
                   onChange={(e) => setMaterialType(e.target.value)}
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-4 focus:ring-green-200 outline-none appearance-none cursor-pointer"
                 >
                   <option>Plastic Bottles (PET)</option>
                   <option>Water Sachets</option>
@@ -422,13 +407,13 @@ const CitizenDashboard = ({ user, onLogout }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Quantity</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Estimated Quantity</label>
                 <input 
                   type="text"
                   value={qty}
                   onChange={(e) => setQty(e.target.value)}
-                  placeholder="e.g., 2 large bags"
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                  placeholder="e.g., 2 large bags or 10kg"
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-4 focus:ring-green-200 outline-none"
                 />
               </div>
 
@@ -436,20 +421,22 @@ const CitizenDashboard = ({ user, onLogout }) => {
                  <button 
                   type="button"
                   onClick={handleGetLocation}
-                  className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-medium transition-colors ${locationStatus === 'success' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600 border border-gray-200'}`}
+                  className={`w-full flex items-center justify-center gap-2 p-4 rounded-xl text-base font-semibold transition-all duration-300 shadow-md ${locationStatus === 'success' ? 'bg-green-600 text-white hover:bg-green-700 shadow-green-300' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
                  >
-                   <MapPin className="h-4 w-4" />
-                   {locationStatus === 'idle' && "Get Pickup Location"}
+                   <MapPin className="h-5 w-5" />
+                   {locationStatus === 'idle' && "1. Get Pickup Location"}
                    {locationStatus === 'locating' && "Locating..."}
-                   {locationStatus === 'success' && location && location.address}
+                   {locationStatus === 'success' && location && (
+                       <span className="truncate">{location.address}</span>
+                   )}
                    {locationStatus === 'error' && "Retry Location"}
                  </button>
               </div>
 
               <button 
                 type="submit" 
-                disabled={loading}
-                className="w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all disabled:opacity-50"
+                disabled={loading || !location || !qty}
+                className="w-full bg-green-600 text-white py-4 mt-6 rounded-xl font-bold text-lg shadow-xl shadow-green-200 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Requesting...' : 'Request Pickup'}
               </button>
@@ -467,7 +454,6 @@ const AuthorityDashboard = ({ onLogout }) => {
   const [reports, setReports] = useState([]);
   
   useEffect(() => {
-    // Only fetch type 'waste_report'
     const q = query(
       collection(db, 'artifacts', appId, 'public', 'data', 'reports'),
       orderBy('timestamp', 'desc')
@@ -489,70 +475,81 @@ const AuthorityDashboard = ({ onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      <div className="bg-blue-800 text-white p-4 shadow-md sticky top-0 z-10">
-        <div className="flex justify-between items-center max-w-6xl mx-auto">
+      <div className="bg-blue-800 text-white p-4 shadow-xl sticky top-0 z-10">
+        <div className="flex justify-between items-center max-w-7xl mx-auto w-full px-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
-            <Building2 className="h-6 w-6" /> Authority Portal
+            <Building2 className="h-6 w-6 text-blue-300" /> Sanitation Authority
           </h2>
           <div className="flex items-center gap-4">
             <span className="text-sm bg-blue-700 px-3 py-1 rounded-full hidden md:inline-block">District: Ayawaso West</span>
             <button onClick={onLogout} className="text-sm bg-blue-700 hover:bg-blue-600 px-3 py-1 rounded-lg">
-              Logout
+              <LogOut className="h-4 w-4 inline mr-1"/> Logout
             </button>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Stats Card */}
-          <div className="bg-white p-6 rounded-xl shadow-sm col-span-1 md:col-span-2 flex justify-between items-center">
-            <div>
-              <h3 className="text-gray-500 font-medium">Pending Issues</h3>
-              <p className="text-3xl font-bold text-gray-800">{reports.filter(r => r.status === 'pending').length}</p>
+          <div className="bg-white p-6 rounded-2xl shadow-xl col-span-1 md:col-span-3 flex flex-wrap justify-around items-center border-t-4 border-blue-600">
+            <div className="p-2">
+              <h3 className="text-gray-500 font-medium text-lg">Total Reports</h3>
+              <p className="text-4xl font-extrabold text-gray-900">{reports.length}</p>
             </div>
-            <div>
-              <h3 className="text-gray-500 font-medium">Resolved Today</h3>
-              <p className="text-3xl font-bold text-green-600">{reports.filter(r => r.status === 'resolved').length}</p>
+            <div className="p-2">
+              <h3 className="text-gray-500 font-medium text-lg">Pending Issues</h3>
+              <p className="text-4xl font-extrabold text-red-600">{reports.filter(r => r.status === 'pending').length}</p>
             </div>
-            <div className="hidden md:block text-right">
-              <p className="text-sm text-gray-400">System Status</p>
-              <p className="text-green-500 font-medium flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full"></span> Online</p>
+            <div className="p-2 text-right">
+              <h3 className="text-gray-500 font-medium text-lg">Resolved Issues</h3>
+              <p className="text-4xl font-extrabold text-green-600">{reports.filter(r => r.status === 'resolved').length}</p>
             </div>
           </div>
 
           {/* List of Reports */}
-          <div className="col-span-1 md:col-span-2">
-            <h3 className="text-lg font-bold text-gray-700 mb-4">Incoming Reports</h3>
+          <div className="col-span-1 md:col-span-3">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">Report Queue</h3>
             {reports.length === 0 ? (
-               <div className="text-center py-12 bg-white rounded-xl text-gray-400">No active reports found. Good job!</div>
+               <div className="text-center py-12 bg-white rounded-xl text-gray-400 border border-dashed border-gray-300">
+                  <Clock className="h-8 w-8 mx-auto mb-2"/>
+                  <p>No active reports found. The streets are clean!</p>
+               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {reports.map((report) => (
-                  <div key={report.id} className={`bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col ${report.status === 'resolved' ? 'opacity-60 grayscale' : ''}`}>
-                    <div className="h-40 bg-gray-200 relative">
-                      <img src={report.imageUrl} alt="Waste" className="w-full h-full object-cover" />
-                      <div className={`absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-bold uppercase ${report.status === 'pending' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
+                  <div 
+                    key={report.id} 
+                    className={`bg-white rounded-2xl shadow-lg border overflow-hidden flex flex-col transition-shadow hover:shadow-2xl ${report.status === 'resolved' ? 'border-green-300' : 'border-red-300'}`}
+                  >
+                    <div className="h-48 bg-gray-200 relative">
+                      <img 
+                        src={report.imageUrl} 
+                        alt="Waste" 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/600x400/e2e8f0/1e293b?text=Image+Unavailable'; }}
+                      />
+                      <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold uppercase shadow-md ${report.status === 'pending' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
                         {report.status}
                       </div>
                     </div>
-                    <div className="p-4 flex-1 flex flex-col">
-                      <div className="flex items-start gap-2 mb-2 text-sm text-gray-500">
-                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <span className="line-clamp-1">{report.location?.address || "Unknown Location"}</span>
+                    <div className="p-5 flex-1 flex flex-col">
+                      <div className="flex items-start gap-2 mb-3 text-sm text-gray-600">
+                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-500" />
+                        <span className="font-medium line-clamp-1">{report.location?.address || "Unknown Location"}</span>
                       </div>
-                      <p className="text-gray-800 font-medium mb-4 line-clamp-2 flex-1">"{report.description}"</p>
+                      <p className="text-gray-800 font-medium mb-4 line-clamp-3 flex-1 text-base">"{report.description}"</p>
                       
                       {report.status === 'pending' ? (
                         <button 
                           onClick={() => markResolved(report.id)}
-                          className="mt-auto w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                          className="mt-auto w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-bold shadow-md shadow-blue-200"
                         >
-                          <CheckCircle className="h-4 w-4" /> Mark Resolved
+                          <CheckCircle className="h-5 w-5" /> Mark Resolved
                         </button>
                       ) : (
-                        <div className="mt-auto w-full bg-green-50 text-green-700 py-2 rounded-lg text-center text-sm font-medium border border-green-100">
-                          Resolved
+                        <div className="mt-auto w-full bg-green-100 text-green-700 py-3 rounded-xl text-center text-sm font-bold border border-green-200">
+                          <CheckCircle className="h-4 w-4 inline mr-1"/> Successfully Resolved
                         </div>
                       )}
                     </div>
@@ -595,41 +592,49 @@ const RecyclerDashboard = ({ onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-orange-600 text-white p-4 shadow-md sticky top-0 z-10">
-        <div className="flex justify-between items-center max-w-6xl mx-auto">
+      <div className="bg-orange-600 text-white p-4 shadow-xl sticky top-0 z-10">
+        <div className="flex justify-between items-center max-w-7xl mx-auto w-full px-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
-            <Truck className="h-6 w-6" /> Jekora Ventures Portal
+            <Truck className="h-6 w-6 text-orange-300" /> Jekora Ventures Portal
           </h2>
           <button onClick={onLogout} className="text-sm bg-orange-700 hover:bg-orange-500 px-3 py-1 rounded-lg">
-            Logout
+            <LogOut className="h-4 w-4 inline mr-1"/> Logout
           </button>
         </div>
       </div>
 
-      <div className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8">
-        <h3 className="text-lg font-bold text-gray-700 mb-6 flex items-center gap-2">
-          <Recycle className="h-5 w-5 text-green-600" />
-          Ready for Collection
+      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8">
+        <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <Recycle className="h-6 w-6 text-green-600" />
+          Recycling Pickups Queue
         </h3>
 
         {requests.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
-            <Recycle className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-            <p className="text-gray-500">No pickup requests available yet.</p>
+          <div className="text-center py-20 bg-white rounded-xl border-4 border-dashed border-gray-200">
+            <Recycle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-600 font-medium text-lg">No pickup requests available yet.</p>
+            <p className="text-sm text-gray-400">Check back later for new citizen requests.</p>
           </div>
         ) : (
           <div className="grid gap-4">
             {requests.map((req) => (
-              <div key={req.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div 
+                key={req.id} 
+                className={`bg-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300 hover:shadow-xl ${req.status === 'collected' ? 'opacity-70 bg-gray-50 border-l-4 border-gray-300' : 'border-l-4 border-green-500'}`}
+              >
                 <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-full ${req.status === 'collected' ? 'bg-gray-100' : 'bg-green-100'}`}>
-                    <Recycle className={`h-6 w-6 ${req.status === 'collected' ? 'text-gray-400' : 'text-green-600'}`} />
+                  <div className={`p-3 rounded-xl ${req.status === 'collected' ? 'bg-gray-200' : 'bg-green-100'}`}>
+                    <Recycle className={`h-6 w-6 ${req.status === 'collected' ? 'text-gray-600' : 'text-green-700'}`} />
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-800">{req.materialType}</h4>
-                    <p className="text-sm text-gray-500">{req.quantity} • {req.location?.address}</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Reported: {req.timestamp ? new Date(req.timestamp.seconds * 1000).toLocaleDateString() : 'Just now'}
+                    <h4 className="font-bold text-xl text-gray-800">{req.materialType}</h4>
+                    <p className="text-base text-gray-600 font-medium">Quantity: {req.quantity}</p>
+                    <div className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                      <MapPin className="h-4 w-4"/>
+                      <span className="line-clamp-1">{req.location?.address}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Requested: {req.timestamp ? new Date(req.timestamp.seconds * 1000).toLocaleDateString('en-GH') : 'Just now'}
                     </p>
                   </div>
                 </div>
@@ -637,13 +642,13 @@ const RecyclerDashboard = ({ onLogout }) => {
                 {req.status === 'ready' ? (
                   <button 
                     onClick={() => markCollected(req.id)}
-                    className="bg-orange-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors shadow-sm whitespace-nowrap"
+                    className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors shadow-md shadow-orange-200 whitespace-nowrap"
                   >
-                    Confirm Pickup
+                    <Truck className="h-5 w-5 inline mr-1"/> Confirm Pickup
                   </button>
                 ) : (
-                  <span className="flex items-center gap-1 text-green-600 font-medium bg-green-50 px-4 py-2 rounded-lg border border-green-100 whitespace-nowrap">
-                    <CheckCircle className="h-4 w-4" /> Collected
+                  <span className="flex items-center gap-1 text-green-700 font-bold bg-green-100 px-4 py-3 rounded-xl border border-green-200 whitespace-nowrap shadow-inner">
+                    <CheckCircle className="h-5 w-5" /> Collected
                   </span>
                 )}
               </div>
@@ -665,6 +670,9 @@ export default function App() {
   // Handle Authentication
   useEffect(() => {
     const initAuth = async () => {
+      // Set debug logging for Firestore/Auth to see activity in the console
+      // setLogLevel('debug'); 
+
       if (typeof globalThis.__initial_auth_token !== 'undefined' && globalThis.__initial_auth_token) {
         await signInWithCustomToken(auth, globalThis.__initial_auth_token);
       } else {
@@ -691,7 +699,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-green-600"></div>
       </div>
     );
   }
@@ -714,4 +722,4 @@ export default function App() {
   }
 
   return <div>Error: Unknown State</div>;
-} 
+}
