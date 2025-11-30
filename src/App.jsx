@@ -14,10 +14,27 @@ import {
   Navigation, User, Building2, Truck, Image as ImageIcon
 } from 'lucide-react';
 
+
 /* --- FIREBASE CONFIGURATION & SETUP --- 
   This section handles the connection to the backend database.
 */
 let firebaseConfig;
+
+// Hardcoded config for deployment to Netlify without env vars. It can be put into .env files too but it's safe to leave it here for this project
+
+const hardcodedConfig = {
+  apiKey: "AIzaSyBrD71MIMtC9_vJ9SC45xB2KUKk3p3leFw",
+  authDomain: "clean-ghana-app.firebaseapp.com",
+  projectId: "clean-ghana-app",
+  storageBucket: "clean-ghana-app.firebasestorage.app",
+  messagingSenderId: "805375125732",
+  appId: "1:805375125732:web:3a51de0177123006e764f1",
+  measurementId: "G-SLBBM6NYHB"
+};
+
+firebaseConfig = hardcodedConfig;
+
+// The try-catch allows us to use a sandbox environment where the config is injected at runtime
 try {
   if (typeof globalThis.__firebase_config !== 'undefined' && globalThis.__firebase_config) {
     firebaseConfig = typeof globalThis.__firebase_config === 'string' ? JSON.parse(globalThis.__firebase_config) : globalThis.__firebase_config;
@@ -35,14 +52,17 @@ if (!firebaseConfig) {
     projectId: import.meta.env.REACT_APP_FIREBASE_PROJECT_ID || '',
     storageBucket: import.meta.env.REACT_APP_FIREBASE_STORAGE_BUCKET || '',
     messagingSenderId: import.meta.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: import.meta.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id'
+    appId: import.meta.env.REACT_APP_FIREBASE_APP_ID || 'clean-ghana-app'
   };
 }
 
+// Initialize firebase app
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const appId = typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : (firebaseConfig.appId || 'default-app-id');
+
+// Helper to get App ID for paths
+const appId = (typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : (firebaseConfig.appId || 'clean-ghana-app'));
 
 /* --- COMPONENTS --- 
 */
