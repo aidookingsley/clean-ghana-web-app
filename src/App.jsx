@@ -10,8 +10,7 @@ import {
 } from 'firebase/auth';
 import { 
   MapPin, Camera, Trash2, Recycle, LogOut, 
-  CheckCircle, Clock, AlertTriangle, Menu, X,
-  Navigation, User, Building2, Truck, Image as ImageIcon
+  CheckCircle, Clock, AlertTriangle, User, Building2, Truck
 } from 'lucide-react';
 
 /* --- FIREBASE CONFIGURATION & SETUP --- */
@@ -22,7 +21,7 @@ const hardcodedConfig = {
   apiKey: "AIzaSyBrD71MIMtC9_vJ9SC45xB2KUKk3p3leFw",
   authDomain: "clean-ghana-app.firebaseapp.com",
   projectId: "clean-ghana-app",
-  storageBucket: "clean-ghana-app.firebasestorage.app",
+  storageBucket: "clean-ghana-app.firebase-storage.app",
   messagingSenderId: "805375125732",
   appId: "1:805375125732:web:3a51de0177123006e764f1",
   measurementId: "G-SLBBM6NYHB"
@@ -54,7 +53,6 @@ const db = getFirestore(app);
 
 
 // Helper to get App ID for paths
-// Uses the ID from your config ("clean-ghana-app") or falls back if in sandbox
 const appId = (typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : 'clean-ghana-app');
 
 
@@ -271,7 +269,7 @@ const CitizenDashboard = ({ user, onLogout }) => {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-green-700 text-white p-4 shadow-xl sticky top-0 z-10">
-        <div className="flex justify-between items-center max-w-6xl mx-auto">
+        <div className="flex justify-between items-center max-w-7xl mx-auto">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Recycle className="h-6 w-6 text-green-300" /> CleanGhana Citizen
           </h2>
@@ -281,10 +279,11 @@ const CitizenDashboard = ({ user, onLogout }) => {
         </div>
       </div>
 
-      {/* Main Content Area - Wider on Desktop */}
-      <div className="max-w-xl md:max-w-3xl lg:max-w-4xl mx-auto p-4 mt-8">
+      {/* Main Content Area - WIDER on Desktop */}
+      <div className="max-w-7xl mx-auto p-4 mt-8">
+        
         {/* Navigation Tabs (Improved Style) */}
-        <div className="flex bg-white rounded-2xl shadow-xl p-2 mb-8 border border-gray-100">
+        <div className="flex bg-white rounded-2xl shadow-xl p-2 mb-8 border border-gray-100 max-w-xl md:max-w-4xl mx-auto">
           <button 
             onClick={() => setActiveTab('report')}
             className={`flex-1 py-3 rounded-xl text-base font-semibold transition-all duration-300 ${activeTab === 'report' ? 'bg-red-500 text-white shadow-md shadow-red-200' : 'text-gray-600 hover:bg-gray-100'}`}
@@ -299,9 +298,9 @@ const CitizenDashboard = ({ user, onLogout }) => {
           </button>
         </div>
 
-        {/* Content Area */}
+        {/* Content Area - Now uses a responsive grid */}
         {activeTab === 'report' ? (
-          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl md:max-w-6xl mx-auto">
             <div className="text-center mb-6">
               <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 border-4 border-red-100">
                 <AlertTriangle className="text-red-600 h-8 w-8" />
@@ -310,79 +309,86 @@ const CitizenDashboard = ({ user, onLogout }) => {
               <p className="text-sm text-gray-500">Document the issue for sanitation action.</p>
             </div>
 
-            <form onSubmit={handleSubmitReport} className="space-y-6">
-              {/* Camera Input Section */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Photo of Waste Site</label>
-                
-                {/* Hidden File Input */}
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  capture="environment" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange}
-                  className="hidden" 
-                />
+            <form onSubmit={handleSubmitReport} className="grid md:grid-cols-2 gap-6 md:gap-8">
+                {/* LEFT COLUMN: Image & Location */}
+                <div className="md:order-last space-y-6">
+                    {/* Camera Input Section */}
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Photo of Waste Site</label>
+                        
+                        {/* Hidden File Input */}
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          capture="environment" 
+                          ref={fileInputRef} 
+                          onChange={handleFileChange}
+                          className="hidden" 
+                        />
 
-                <div 
-                  onClick={handleCameraClick}
-                  className={`border-2 border-dashed rounded-xl p-0 flex flex-col items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer transition-colors overflow-hidden relative ${imagePreview ? 'border-red-500 h-64' : 'border-gray-300 h-40'}`}
-                >
-                  {imagePreview ? (
-                    <>
-                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                        <span className="text-white font-bold flex items-center gap-2 text-lg"><Camera className="h-6 w-6"/> Change Photo</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center p-8">
-                      <Camera className="h-10 w-10 mb-2 text-gray-500" />
-                      <span className="text-sm font-medium">Tap to take photo</span>
+                        <div 
+                          onClick={handleCameraClick}
+                          className={`border-2 border-dashed rounded-xl p-0 flex flex-col items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer transition-colors overflow-hidden relative ${imagePreview ? 'border-red-500 h-64' : 'border-gray-300 h-40'}`}
+                        >
+                          {imagePreview ? (
+                            <>
+                              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                <span className="text-white font-bold flex items-center gap-2 text-lg"><Camera className="h-6 w-6"/> Change Photo</span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center p-8">
+                              <Camera className="h-10 w-10 mb-2 text-gray-500" />
+                              <span className="text-sm font-medium">Tap to take photo</span>
+                            </div>
+                          )}
+                        </div>
                     </div>
-                  )}
+
+                    {/* Location Button */}
+                    <div>
+                        <button 
+                          type="button"
+                          onClick={handleGetLocation}
+                          className={`w-full flex items-center justify-center gap-2 p-4 rounded-xl text-base font-semibold transition-all duration-300 shadow-md ${locationStatus === 'success' ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-300' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                        >
+                          <MapPin className="h-5 w-5" />
+                          {locationStatus === 'idle' && "1. Get GPS Location"}
+                          {locationStatus === 'locating' && "Locating..."}
+                          {locationStatus === 'success' && location && (
+                              <span className="truncate">{location.address}</span>
+                          )}
+                          {locationStatus === 'error' && "Retry Location"}
+                        </button>
+                    </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-                <textarea 
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g., Overflowing bin near the main road. Mostly household rubbish and plastics."
-                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-4 focus:ring-red-200 outline-none transition-shadow"
-                  rows="4"
-                />
-              </div>
+                {/* RIGHT COLUMN: Description & Submit */}
+                <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                      <textarea 
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="e.g., Overflowing bin near the main road. Mostly household rubbish and plastics."
+                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-4 focus:ring-red-200 outline-none transition-shadow"
+                        rows="6"
+                      />
+                    </div>
 
-              <div>
-                 <button 
-                  type="button"
-                  onClick={handleGetLocation}
-                  className={`w-full flex items-center justify-center gap-2 p-4 rounded-xl text-base font-semibold transition-all duration-300 shadow-md ${locationStatus === 'success' ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-300' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
-                 >
-                   <MapPin className="h-5 w-5" />
-                   {locationStatus === 'idle' && "1. Get GPS Location"}
-                   {locationStatus === 'locating' && "Locating..."}
-                   {locationStatus === 'success' && location && (
-                      <span className="truncate">{location.address}</span>
-                   )}
-                   {locationStatus === 'error' && "Retry Location"}
-                 </button>
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={loading || !location || !description}
-                className="w-full bg-red-600 text-white py-4 mt-6 rounded-xl font-bold text-lg shadow-xl shadow-red-200 hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Submitting...' : 'Submit Waste Report'}
-              </button>
+                    <button 
+                      type="submit" 
+                      disabled={loading || !location || !description}
+                      className="w-full bg-red-600 text-white py-4 mt-6 rounded-xl font-bold text-lg shadow-xl shadow-red-200 hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? 'Submitting...' : 'Submit Waste Report'}
+                    </button>
+                </div>
             </form>
           </div>
         ) : (
-          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl md:max-w-6xl mx-auto">
             <div className="text-center mb-6">
               <div className="bg-green-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 border-4 border-green-100">
                 <Recycle className="text-green-600 h-8 w-8" />
@@ -391,55 +397,62 @@ const CitizenDashboard = ({ user, onLogout }) => {
               <p className="text-sm text-gray-500">Schedule collection of sorted materials.</p>
             </div>
 
-            <form onSubmit={handleSubmitRecycle} className="space-y-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Material Type</label>
-                <select 
-                  value={materialType}
-                  onChange={(e) => setMaterialType(e.target.value)}
-                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-4 focus:ring-green-200 outline-none appearance-none cursor-pointer"
+            <form onSubmit={handleSubmitRecycle} className="grid md:grid-cols-2 gap-6 md:gap-8">
+              {/* LEFT COLUMN: Material & Quantity */}
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Material Type</label>
+                  <select 
+                    value={materialType}
+                    onChange={(e) => setMaterialType(e.target.value)}
+                    className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-4 focus:ring-green-200 outline-none appearance-none cursor-pointer"
+                  >
+                    <option>Plastic Bottles (PET)</option>
+                    <option>Water Sachets</option>
+                    <option>Cardboard / Paper</option>
+                    <option>Aluminum Cans</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Estimated Quantity</label>
+                  <input 
+                    type="text"
+                    value={qty}
+                    onChange={(e) => setQty(e.target.value)}
+                    placeholder="e.g., 2 large bags or 10kg"
+                    className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-4 focus:ring-green-200 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: Location & Submit */}
+              <div className="space-y-6 md:pt-8"> 
+                 <div>
+                    <button 
+                      type="button"
+                      onClick={handleGetLocation}
+                      className={`w-full flex items-center justify-center gap-2 p-4 rounded-xl text-base font-semibold transition-all duration-300 shadow-md ${locationStatus === 'success' ? 'bg-green-600 text-white hover:bg-green-700 shadow-green-300' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                    >
+                      <MapPin className="h-5 w-5" />
+                      {locationStatus === 'idle' && "1. Get Pickup Location"}
+                      {locationStatus === 'locating' && "Locating..."}
+                      {locationStatus === 'success' && location && (
+                          <span className="truncate">{location.address}</span>
+                      )}
+                      {locationStatus === 'error' && "Retry Location"}
+                    </button>
+                 </div>
+
+                <button 
+                  type="submit" 
+                  disabled={loading || !location || !qty}
+                  className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg shadow-xl shadow-green-200 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option>Plastic Bottles (PET)</option>
-                  <option>Water Sachets</option>
-                  <option>Cardboard / Paper</option>
-                  <option>Aluminum Cans</option>
-                </select>
+                  {loading ? 'Requesting...' : 'Request Pickup'}
+                </button>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Estimated Quantity</label>
-                <input 
-                  type="text"
-                  value={qty}
-                  onChange={(e) => setQty(e.target.value)}
-                  placeholder="e.g., 2 large bags or 10kg"
-                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-4 focus:ring-green-200 outline-none"
-                />
-              </div>
-
-              <div>
-                 <button 
-                  type="button"
-                  onClick={handleGetLocation}
-                  className={`w-full flex items-center justify-center gap-2 p-4 rounded-xl text-base font-semibold transition-all duration-300 shadow-md ${locationStatus === 'success' ? 'bg-green-600 text-white hover:bg-green-700 shadow-green-300' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-                 >
-                   <MapPin className="h-5 w-5" />
-                   {locationStatus === 'idle' && "1. Get Pickup Location"}
-                   {locationStatus === 'locating' && "Locating..."}
-                   {locationStatus === 'success' && location && (
-                       <span className="truncate">{location.address}</span>
-                   )}
-                   {locationStatus === 'error' && "Retry Location"}
-                 </button>
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={loading || !location || !qty}
-                className="w-full bg-green-600 text-white py-4 mt-6 rounded-xl font-bold text-lg shadow-xl shadow-green-200 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Requesting...' : 'Request Pickup'}
-              </button>
             </form>
           </div>
         )}
@@ -473,6 +486,10 @@ const AuthorityDashboard = ({ onLogout }) => {
     });
   };
 
+  const pendingCount = reports.filter(r => r.status === 'pending').length;
+  const resolvedCount = reports.filter(r => r.status === 'resolved').length;
+  const totalReports = reports.length;
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <div className="bg-blue-800 text-white p-4 shadow-xl sticky top-0 z-10">
@@ -490,74 +507,76 @@ const AuthorityDashboard = ({ onLogout }) => {
       </div>
 
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Stats Card */}
-          <div className="bg-white p-6 rounded-2xl shadow-xl col-span-1 md:col-span-3 flex flex-wrap justify-around items-center border-t-4 border-blue-600">
-            <div className="p-2">
-              <h3 className="text-gray-500 font-medium text-lg">Total Reports</h3>
-              <p className="text-4xl font-extrabold text-gray-900">{reports.length}</p>
+        
+        {/* Stats Card - Now a responsive grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            {/* Total Reports */}
+            <div className="bg-white p-6 rounded-2xl shadow-xl border-b-4 border-blue-600">
+                <h3 className="text-gray-500 font-medium text-lg">Total Reports</h3>
+                <p className="text-4xl font-extrabold text-gray-900 mt-1">{totalReports}</p>
             </div>
-            <div className="p-2">
-              <h3 className="text-gray-500 font-medium text-lg">Pending Issues</h3>
-              <p className="text-4xl font-extrabold text-red-600">{reports.filter(r => r.status === 'pending').length}</p>
+            {/* Pending Issues */}
+            <div className="bg-white p-6 rounded-2xl shadow-xl border-b-4 border-red-600">
+                <h3 className="text-gray-500 font-medium text-lg">Pending Issues</h3>
+                <p className="text-4xl font-extrabold text-red-600 mt-1">{pendingCount}</p>
             </div>
-            <div className="p-2 text-right">
-              <h3 className="text-gray-500 font-medium text-lg">Resolved Issues</h3>
-              <p className="text-4xl font-extrabold text-green-600">{reports.filter(r => r.status === 'resolved').length}</p>
+            {/* Resolved Issues */}
+            <div className="bg-white p-6 rounded-2xl shadow-xl border-b-4 border-green-600">
+                <h3 className="text-gray-500 font-medium text-lg">Resolved Issues</h3>
+                <p className="text-4xl font-extrabold text-green-600 mt-1">{resolvedCount}</p>
             </div>
-          </div>
+        </div>
 
-          {/* List of Reports */}
-          <div className="col-span-1 md:col-span-3">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">Report Queue</h3>
-            {reports.length === 0 ? (
-               <div className="text-center py-12 bg-white rounded-xl text-gray-400 border border-dashed border-gray-300">
-                  <Clock className="h-8 w-8 mx-auto mb-2"/>
-                  <p>No active reports found. The streets are clean!</p>
-               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {reports.map((report) => (
-                  <div 
-                    key={report.id} 
-                    className={`bg-white rounded-2xl shadow-lg border overflow-hidden flex flex-col transition-shadow hover:shadow-2xl ${report.status === 'resolved' ? 'border-green-300' : 'border-red-300'}`}
-                  >
-                    <div className="h-48 bg-gray-200 relative">
-                      <img 
-                        src={report.imageUrl} 
-                        alt="Waste" 
-                        className="w-full h-full object-cover" 
-                        onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/600x400/e2e8f0/1e293b?text=Image+Unavailable'; }}
-                      />
-                      <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold uppercase shadow-md ${report.status === 'pending' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
-                        {report.status}
-                      </div>
-                    </div>
-                    <div className="p-5 flex-1 flex flex-col">
-                      <div className="flex items-start gap-2 mb-3 text-sm text-gray-600">
-                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-500" />
-                        <span className="font-medium line-clamp-1">{report.location?.address || "Unknown Location"}</span>
-                      </div>
-                      <p className="text-gray-800 font-medium mb-4 line-clamp-3 flex-1 text-base">"{report.description}"</p>
-                      
-                      {report.status === 'pending' ? (
-                        <button 
-                          onClick={() => markResolved(report.id)}
-                          className="mt-auto w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-bold shadow-md shadow-blue-200"
-                        >
-                          <CheckCircle className="h-5 w-5" /> Mark Resolved
-                        </button>
-                      ) : (
-                        <div className="mt-auto w-full bg-green-100 text-green-700 py-3 rounded-xl text-center text-sm font-bold border border-green-200">
-                          <CheckCircle className="h-4 w-4 inline mr-1"/> Successfully Resolved
-                        </div>
-                      )}
+        {/* List of Reports */}
+        <div>
+          <h3 className="text-2xl font-bold text-gray-800 mb-4">Report Queue</h3>
+          {reports.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-xl text-gray-400 border border-dashed border-gray-300">
+                <Clock className="h-8 w-8 mx-auto mb-2"/>
+                <p>No active reports found. The streets are clean!</p>
+              </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {reports.map((report) => (
+                <div 
+                  key={report.id} 
+                  className={`bg-white rounded-2xl shadow-lg border overflow-hidden flex flex-col transition-shadow hover:shadow-2xl ${report.status === 'resolved' ? 'border-green-300' : 'border-red-300'}`}
+                >
+                  <div className="h-48 bg-gray-200 relative">
+                    <img 
+                      src={report.imageUrl} 
+                      alt="Waste" 
+                      className="w-full h-full object-cover" 
+                      onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/600x400/e2e8f0/1e293b?text=Image+Unavailable'; }}
+                    />
+                    <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold uppercase shadow-md ${report.status === 'pending' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
+                      {report.status}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  <div className="p-5 flex-1 flex flex-col">
+                    <div className="flex items-start gap-2 mb-3 text-sm text-gray-600">
+                      <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-500" />
+                      <span className="font-medium line-clamp-1">{report.location?.address || "Unknown Location"}</span>
+                    </div>
+                    <p className="text-gray-800 font-medium mb-4 line-clamp-3 flex-1 text-base">"{report.description}"</p>
+                    
+                    {report.status === 'pending' ? (
+                      <button 
+                        onClick={() => markResolved(report.id)}
+                        className="mt-auto w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-bold shadow-md shadow-blue-200"
+                      >
+                        <CheckCircle className="h-5 w-5" /> Mark Resolved
+                      </button>
+                    ) : (
+                      <div className="mt-auto w-full bg-green-100 text-green-700 py-3 rounded-xl text-center text-sm font-bold border border-green-200">
+                        <CheckCircle className="h-4 w-4 inline mr-1"/> Successfully Resolved
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -670,9 +689,6 @@ export default function App() {
   // Handle Authentication
   useEffect(() => {
     const initAuth = async () => {
-      // Set debug logging for Firestore/Auth to see activity in the console
-      // setLogLevel('debug'); 
-
       if (typeof globalThis.__initial_auth_token !== 'undefined' && globalThis.__initial_auth_token) {
         await signInWithCustomToken(auth, globalThis.__initial_auth_token);
       } else {
