@@ -70,23 +70,23 @@ const appId = (typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id 
 // --- 1. LOGIN SCREEN ---
 const LoginScreen = ({ onLogin }) => {
   return (
-    <div className="min-h-screen bg-green-50 flex flex-col items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 flex flex-col items-center justify-center p-4">
+      <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <div className="bg-green-600 p-4 rounded-full">
+          <div className="bg-green-600 p-4 rounded-full shadow-lg">
             <Recycle className="w-10 h-10 text-white" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">CleanGhana</h1>
-        <p className="text-center text-gray-500 mb-8">Smart Waste Reporting & Recycling</p>
+        <h1 className="text-4xl font-extrabold text-center text-gray-900 mb-2">CleanGhana</h1>
+        <p className="text-center text-gray-500 mb-10">Smart Waste Reporting & Recycling Platform</p>
         
         <div className="space-y-4">
           <button 
             onClick={() => onLogin('citizen')}
-            className="w-full flex items-center p-4 border-2 border-green-100 rounded-xl hover:bg-green-50 hover:border-green-500 transition-all group"
+            className="w-full flex items-center p-5 border-2 border-green-200 rounded-xl bg-green-50 hover:bg-green-100 hover:border-green-500 transition-all duration-300 group shadow-md"
           >
-            <div className="bg-green-100 p-3 rounded-full mr-4 group-hover:bg-green-200">
-              <User className="text-green-700" />
+            <div className="bg-green-200 p-3 rounded-xl mr-4 group-hover:bg-green-300 transition-colors">
+              <User className="text-green-800" />
             </div>
             <div className="text-left">
               <h3 className="font-bold text-gray-800">Citizen</h3>
@@ -96,10 +96,10 @@ const LoginScreen = ({ onLogin }) => {
 
           <button 
             onClick={() => onLogin('authority')}
-            className="w-full flex items-center p-4 border-2 border-blue-100 rounded-xl hover:bg-blue-50 hover:border-blue-500 transition-all group"
+            className="w-full flex items-center p-5 border-2 border-blue-200 rounded-xl bg-blue-50 hover:bg-blue-100 hover:border-blue-500 transition-all duration-300 group shadow-md"
           >
-            <div className="bg-blue-100 p-3 rounded-full mr-4 group-hover:bg-blue-200">
-              <Building2 className="text-blue-700" />
+            <div className="bg-blue-200 p-3 rounded-xl mr-4 group-hover:bg-blue-300 transition-colors">
+              <Building2 className="text-blue-800" />
             </div>
             <div className="text-left">
               <h3 className="font-bold text-gray-800">Sanitation Authority</h3>
@@ -109,10 +109,10 @@ const LoginScreen = ({ onLogin }) => {
 
           <button 
             onClick={() => onLogin('recycler')}
-            className="w-full flex items-center p-4 border-2 border-orange-100 rounded-xl hover:bg-orange-50 hover:border-orange-500 transition-all group"
+            className="w-full flex items-center p-5 border-2 border-orange-200 rounded-xl bg-orange-50 hover:bg-orange-100 hover:border-orange-500 transition-all duration-300 group shadow-md"
           >
-            <div className="bg-orange-100 p-3 rounded-full mr-4 group-hover:bg-orange-200">
-              <Truck className="text-orange-700" />
+            <div className="bg-orange-200 p-3 rounded-xl mr-4 group-hover:bg-orange-300 transition-colors">
+              <Truck className="text-orange-800" />
             </div>
             <div className="text-left">
               <h3 className="font-bold text-gray-800">Recycling Company</h3>
